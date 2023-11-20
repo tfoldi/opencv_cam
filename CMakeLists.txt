@@ -10,15 +10,6 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
-# Emulate colcon by providing paths to other projects in the workspace
-if ($ENV{CLION_IDE})
-  message(STATUS "Running inside CLion")
-  find_package(fastrtps_cmake_module REQUIRED)
-  set(FastRTPS_INCLUDE_DIR "/opt/ros/foxy/include")
-  set(FastRTPS_LIBRARY_RELEASE "/opt/ros/foxy/lib/libfastrtps.so")
-  set(ros2_shared_DIR "${PROJECT_SOURCE_DIR}/../../../install/ros2_shared/share/ros2_shared/cmake")
-endif ()
-
 # Try for OpenCV 4.X, but settle for whatever is installed
 find_package(OpenCV 4 QUIET)
 if (NOT OpenCV_FOUND)
@@ -64,6 +55,7 @@ ament_target_dependencies(
   ros2_shared
   rclcpp_components
   sensor_msgs
+  ros2_shared
 )
 rclcpp_components_register_nodes(opencv_cam_node "opencv_cam::OpencvCamNode")
 set(node_plugins "${node_plugins}opencv_cam::OpencvCamNode;$<TARGET_FILE:opencv_cam_node>\n")
