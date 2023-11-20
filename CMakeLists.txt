@@ -61,6 +61,7 @@ ament_target_dependencies(
   class_loader
   OpenCV
   rclcpp
+  ros2_shared
   rclcpp_components
   sensor_msgs
 )
