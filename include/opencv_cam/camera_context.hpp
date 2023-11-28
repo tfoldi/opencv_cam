@@ -14,6 +14,7 @@ namespace opencv_cam
   CXT_MACRO_MEMBER(fps, int, 0)                                   /* Desired frames per second */ \
   \
   CXT_MACRO_MEMBER(filename, std::string, "")                     /* Filename */ \
+  CXT_MACRO_MEMBER(start_stamp, std::string, "")                  /* Use start_stamp + pos insted of now() */ \
   \
   CXT_MACRO_MEMBER(index, int, 0)                                 /* Device index, see cv::VideoCaptureAPIs */ \
   CXT_MACRO_MEMBER(width, int, 0)                                 /* Device width */ \

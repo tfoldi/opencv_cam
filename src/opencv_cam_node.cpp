@@ -1,6 +1,8 @@
 #include "opencv_cam/opencv_cam_node.hpp"
 
 #include <iostream>
+#include <chrono>
+#include <sstream>
 
 #include "camera_calibration_parsers/parse.hpp"
 
@@ -21,6 +23,19 @@ namespace opencv_cam
       default:
         throw std::runtime_error("unsupported encoding type");
     }
+  }
+
+  rclcpp::Time OpencvCamNode::parseIsoTimestampToRosTime(const std::string& isoTimestamp) {
+    std::tm tm = {};
+    std::istringstream ss(isoTimestamp);
+    // Parse up to seconds
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+
+    // Convert tm to time_t (seconds since epoch)
+    auto time_since_epoch = std::mktime(&tm);
+
+    // Create a ROS2 Time object with the seconds and zero nanoseconds
+    return rclcpp::Time(time_since_epoch, 0, RCL_ROS_TIME);
   }
 
   OpencvCamNode::OpencvCamNode(const rclcpp::NodeOptions &options) :
@@ -73,7 +88,17 @@ namespace opencv_cam
       RCLCPP_INFO(get_logger(), "file %s open, width %g, height %g, publish fps %d",
                   cxt_.filename_.c_str(), width, height, publish_fps_);
 
-      next_stamp_ = now();
+      if (!cxt_.start_stamp_.empty()) {
+        start_stamp_ = parseIsoTimestampToRosTime(cxt_.start_stamp_);
+        RCLCPP_INFO(get_logger(), "(ROS Time: %ld.%09ld)",
+                    now().seconds(), now().nanoseconds());
+        RCLCPP_INFO(get_logger(), "stamping video frames from %s (ROS Time: %ld.%09ld)",
+                    cxt_.start_stamp_.c_str(), start_stamp_.seconds(), start_stamp_.nanoseconds());
+      } else {
+        start_stamp_ = now();
+      }
+
+      next_stamp_ = start_stamp_;
 
     } else {
       capture_ = std::make_shared<cv::VideoCapture>(cxt_.index_);
@@ -144,7 +169,9 @@ namespace opencv_cam
         break;
       }
 
-      auto stamp = now();
+      auto position_in_ms = capture_->get(cv::CAP_PROP_POS_MSEC);
+      auto position_in_ns = std::chrono::nanoseconds(static_cast<int64_t>(position_in_ms * 1000000LL));
+      auto stamp = start_stamp_ + rclcpp::Duration(position_in_ns);
 
       // Avoid copying image message if possible
       sensor_msgs::msg::Image::UniquePtr image_msg(new sensor_msgs::msg::Image());

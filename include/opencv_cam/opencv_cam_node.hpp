@@ -24,6 +24,7 @@ namespace opencv_cam
 
     int publish_fps_;
     rclcpp::Time next_stamp_;
+    rclcpp::Time start_stamp_;
 
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
@@ -37,6 +38,7 @@ namespace opencv_cam
   private:
 
     void validate_parameters();
+    rclcpp::Time parseIsoTimestampToRosTime(const std::string& isoTimestamp);
 
     void loop();
   };
